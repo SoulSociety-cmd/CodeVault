@@ -4,6 +4,21 @@ import Snippet from '../models/Snippet.js'
 import SnippetVersion from '../models/SnippetVersion.js'
 
 const allowedLanguages = new Set(['c', 'cpp', 'java', 'python', 'javascript', 'typescript', 'html', 'css', 'sql', 'json', 'bash', 'go', 'rust', 'php'])
+const sortFields = {
+  updated: { updatedAt: -1 },
+  created: { createdAt: -1 },
+  viewed: { views: -1, updatedAt: -1 },
+  favorited: { favorites: -1, updatedAt: -1 },
+  alphabetical: { title: 1 },
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function asList(value) {
+  return (Array.isArray(value) ? value : [value]).flatMap((item) => typeof item === 'string' ? item.split(',') : []).map((item) => item.trim().toLowerCase()).filter(Boolean)
+}
 
 function normalizeInput(input) {
   const data = {
@@ -43,8 +58,48 @@ async function findOwnedSnippet(ownerId, id, includeDeleted = false) {
   return snippet
 }
 
+export async function searchSnippets(ownerId, options = {}) {
+  const query = { owner: ownerId, deletedAt: null }
+  const search = typeof options.q === 'string' ? options.q.trim().slice(0, 200) : ''
+  const languages = asList(options.language)
+  const tags = asList(options.tags || options.tag)
+  const visibility = asList(options.visibility)
+
+  if (search) {
+    const pattern = new RegExp(escapeRegex(search), 'i')
+    query.$or = [{ title: pattern }, { description: pattern }, { tags: pattern }, { language: pattern }, { code: pattern }]
+  }
+  if (languages.length) query.language = { $in: languages }
+  if (tags.length) query.tags = { $all: tags }
+  if (visibility.length) query.visibility = { $in: visibility.filter((item) => ['private', 'public'].includes(item)) }
+  if (options.collection) {
+    if (!mongoose.isValidObjectId(options.collection)) throw new Error('Collection ID is invalid.')
+    query.collectionIds = options.collection
+  }
+  if (options.favorite === 'true' || options.favorite === '1') query.favorites = { $gt: 0 }
+
+  const sort = sortFields[options.sort] || sortFields.updated
+  const [snippets, count] = await Promise.all([
+    Snippet.find(query).sort(sort).lean(),
+    Snippet.countDocuments(query),
+  ])
+  return { snippets, count }
+}
+
 export async function listSnippets(ownerId) {
-  return Snippet.find({ owner: ownerId, deletedAt: null }).sort({ updatedAt: -1 }).lean()
+  const result = await searchSnippets(ownerId)
+  return result.snippets
+}
+
+export async function getPopularTags(ownerId) {
+  return Snippet.aggregate([
+    { $match: { owner: new mongoose.Types.ObjectId(ownerId), deletedAt: null } },
+    { $unwind: '$tags' },
+    { $group: { _id: '$tags', count: { $sum: 1 } } },
+    { $sort: { count: -1, _id: 1 } },
+    { $limit: 12 },
+    { $project: { _id: 0, name: '$_id', count: 1 } },
+  ])
 }
 
 export async function createSnippet(ownerId, input) {

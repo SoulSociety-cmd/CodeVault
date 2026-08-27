@@ -6,7 +6,23 @@ function sendError(response, error) {
 }
 
 export async function listSnippets(request, response) {
-  try { return response.json({ success: true, data: { snippets: await snippetService.listSnippets(request.user.id) } }) } catch (error) { return sendError(response, error) }
+  try {
+    const result = await snippetService.searchSnippets(request.user.id, request.query)
+    return response.json({ success: true, data: result })
+  } catch (error) { return sendError(response, error) }
+}
+
+export async function searchSnippets(request, response) {
+  try {
+    const result = await snippetService.searchSnippets(request.user.id, request.query)
+    return response.json({ success: true, data: result })
+  } catch (error) { return sendError(response, error) }
+}
+
+export async function popularTags(request, response) {
+  try {
+    return response.json({ success: true, data: { tags: await snippetService.getPopularTags(request.user.id) } })
+  } catch (error) { return sendError(response, error) }
 }
 
 export async function createSnippet(request, response) {
