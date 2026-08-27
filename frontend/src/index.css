@@ -54,6 +54,7 @@
 
 body {
   margin: 0;
+  background: #10141b;
 }
 
 #root {
@@ -66,6 +67,11 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+button,
+input {
+  font: inherit;
 }
 
 h1,
