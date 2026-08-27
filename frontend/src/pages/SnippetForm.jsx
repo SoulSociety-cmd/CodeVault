@@ -1,0 +1,17 @@
+import Editor from '@monaco-editor/react'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+
+import * as snippetService from '../services/snippetService.js'
+
+const languages = ['c', 'cpp', 'java', 'python', 'javascript', 'typescript', 'html', 'css', 'sql', 'json', 'bash', 'go', 'rust', 'php']
+const initialForm = { title: '', description: '', code: '', language: 'javascript', tags: [], visibility: 'private', collectionIds: [] }
+
+export default function SnippetForm({ editing = false }) {
+  const { id } = useParams(); const navigate = useNavigate(); const [form, setForm] = useState(initialForm); const [tagText, setTagText] = useState(''); const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
+  useEffect(() => { if (editing) snippetService.getSnippet(id).then(({ data }) => setForm(data.data.snippet)).catch(() => setError('Unable to load snippet.')) }, [editing, id])
+  function update(field, value) { setForm((current) => ({ ...current, [field]: value })) }
+  async function handleSubmit(event) { event.preventDefault(); setSaving(true); setError(''); try { const action = editing ? snippetService.updateSnippet(id, form) : snippetService.createSnippet(form); const { data } = await action; navigate(`/snippets/${data.data.snippet._id}`) } catch (requestError) { setError(requestError.response?.data?.message || 'Unable to save snippet.') } finally { setSaving(false) } }
+  function addTag(event) { if (event.key === 'Enter' && tagText.trim()) { event.preventDefault(); update('tags', [...form.tags, tagText.trim()]); setTagText('') } }
+  return <main className="page-shell form-shell"><div className="page-heading"><div><p className="eyebrow">CODEVAULT / {editing ? 'EDIT' : 'NEW'}</p><h1>{editing ? 'Edit Snippet' : 'Create Snippet'}</h1></div><Link to="/snippets">Back to snippets</Link></div><form className="snippet-form" onSubmit={handleSubmit}>{error && <p className="error">{error}</p>}<label>Title<input value={form.title} onChange={(event) => update('title', event.target.value)} required maxLength="160" /></label><label>Description<textarea value={form.description} onChange={(event) => update('description', event.target.value)} rows="3" /></label><div className="form-row"><label>Language<select value={form.language} onChange={(event) => update('language', event.target.value)}>{languages.map((language) => <option key={language}>{language}</option>)}</select></label><label>Visibility<select value={form.visibility} onChange={(event) => update('visibility', event.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Tags<input value={tagText} onChange={(event) => setTagText(event.target.value)} onKeyDown={addTag} placeholder="Type a tag and press Enter" /><span className="tag-list">{form.tags.map((tag) => <button type="button" key={tag} onClick={() => update('tags', form.tags.filter((item) => item !== tag))}>#{tag} ×</button>)}</span></label><label>Code<div className="editor-wrap"><Editor height="420px" language={form.language === 'cpp' ? 'cpp' : form.language} value={form.code} onChange={(value) => update('code', value || '')} options={{ minimap: { enabled: false }, wordWrap: 'on', lineNumbers: 'on' }} /></div></label><div className="form-actions"><Link to="/snippets">Cancel</Link><button className="primary-button" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save changes' : 'Create snippet'}</button></div></form></main>
+}
