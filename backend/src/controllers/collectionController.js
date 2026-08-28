@@ -1,0 +1,14 @@
+import * as collectionService from '../services/collectionService.js'
+
+function sendError(response, error) {
+  const status = error.statusCode || (error.message.includes('required') || error.message.includes('invalid') || error.code === 11000 ? 400 : 500)
+  return response.status(status).json({ success: false, message: error.code === 11000 ? 'A collection with that name already exists.' : error.message })
+}
+
+export async function listCollections(request, response) { try { return response.json({ success: true, data: { collections: await collectionService.listCollections(request.user.id) } }) } catch (error) { return sendError(response, error) } }
+export async function getCollection(request, response) { try { const collection = await collectionService.getCollection(request.user.id, request.params.id); return collection ? response.json({ success: true, data: { collection } }) : response.status(404).json({ success: false, message: 'Collection not found.' }) } catch (error) { return sendError(response, error) } }
+export async function createCollection(request, response) { try { return response.status(201).json({ success: true, data: { collection: await collectionService.createCollection(request.user.id, request.body) } }) } catch (error) { return sendError(response, error) } }
+export async function updateCollection(request, response) { try { const collection = await collectionService.updateCollection(request.user.id, request.params.id, request.body); return collection ? response.json({ success: true, data: { collection } }) : response.status(404).json({ success: false, message: 'Collection not found.' }) } catch (error) { return sendError(response, error) } }
+export async function deleteCollection(request, response) { try { const collection = await collectionService.deleteCollection(request.user.id, request.params.id); return collection ? response.json({ success: true, data: { collection } }) : response.status(404).json({ success: false, message: 'Collection not found.' }) } catch (error) { return sendError(response, error) } }
+export async function addSnippet(request, response) { try { const collection = await collectionService.addSnippet(request.user.id, request.params.id, request.params.snippetId); return collection ? response.json({ success: true, data: { collection } }) : response.status(404).json({ success: false, message: 'Collection not found.' }) } catch (error) { return sendError(response, error) } }
+export async function removeSnippet(request, response) { try { const collection = await collectionService.removeSnippet(request.user.id, request.params.id, request.params.snippetId); return collection ? response.json({ success: true, data: { collection } }) : response.status(404).json({ success: false, message: 'Collection not found.' }) } catch (error) { return sendError(response, error) } }

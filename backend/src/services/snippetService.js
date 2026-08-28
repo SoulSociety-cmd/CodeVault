@@ -137,3 +137,11 @@ export async function restoreSnippet(ownerId, id) {
   await snippet.save()
   return snippet.toObject()
 }
+
+export async function setFavorite(ownerId, id, favorite) {
+  const snippet = await findOwnedSnippet(ownerId, id)
+  if (!snippet) return null
+  snippet.favorites = favorite ? Math.max(1, snippet.favorites) : 0
+  await snippet.save()
+  return snippet.toObject()
+}

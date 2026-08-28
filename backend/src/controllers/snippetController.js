@@ -56,3 +56,11 @@ export async function restoreSnippet(request, response) {
     return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
   } catch (error) { return sendError(response, error) }
 }
+
+export async function favoriteSnippet(request, response) {
+  try { const snippet = await snippetService.setFavorite(request.user.id, request.params.id, true); return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' }) } catch (error) { return sendError(response, error) }
+}
+
+export async function unfavoriteSnippet(request, response) {
+  try { const snippet = await snippetService.setFavorite(request.user.id, request.params.id, false); return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' }) } catch (error) { return sendError(response, error) }
+}

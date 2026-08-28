@@ -9,6 +9,7 @@ import { connectDB } from './config/db.js'
 import healthRoutes from './routes/healthRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 import snippetRoutes from './routes/snippetRoutes.js'
+import collectionRoutes from './routes/collectionRoutes.js'
 
 const app = express()
 const port = process.env.PORT
@@ -26,6 +27,7 @@ app.use(cookieParser())
 app.use('/api/health', healthRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/snippets', snippetRoutes)
+app.use('/api/collections', collectionRoutes)
 
 connectDB().catch((error) => {
   console.error('MongoDB connection failed:', error.message)
