@@ -40,6 +40,14 @@ function makeSlug(title) {
   return `${base}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+async function makeUniqueSlug(title) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const slug = makeSlug(title)
+    if (!await Snippet.exists({ slug })) return slug
+  }
+  return `${makeSlug(title)}-${Date.now().toString(36)}`
+}
+
 function ownerQuery(id, ownerId, includeDeleted = false) {
   const query = { _id: id, owner: ownerId }
   if (!includeDeleted) query.deletedAt = null
@@ -104,7 +112,7 @@ export async function getPopularTags(ownerId) {
 
 export async function createSnippet(ownerId, input) {
   const data = normalizeInput(input)
-  return Snippet.create({ ...data, owner: ownerId, slug: makeSlug(data.title) })
+  return Snippet.create({ ...data, owner: ownerId, slug: await makeUniqueSlug(data.title) })
 }
 
 export async function getSnippet(ownerId, id) {
@@ -144,4 +152,50 @@ export async function setFavorite(ownerId, id, favorite) {
   snippet.favorites = favorite ? Math.max(1, snippet.favorites) : 0
   await snippet.save()
   return snippet.toObject()
+}
+
+const publicViewWindowMs = 15 * 60 * 1000
+const recentPublicViews = new Map()
+
+function viewKey(slug, ipAddress) {
+  return `${slug}:${ipAddress || 'unknown'}`
+}
+
+function shouldCountPublicView(slug, ipAddress) {
+  const key = viewKey(slug, ipAddress)
+  const now = Date.now()
+  const lastViewedAt = recentPublicViews.get(key)
+  if (lastViewedAt && now - lastViewedAt < publicViewWindowMs) return false
+  recentPublicViews.set(key, now)
+  if (recentPublicViews.size > 10000) {
+    for (const [storedKey, timestamp] of recentPublicViews) {
+      if (now - timestamp >= publicViewWindowMs) recentPublicViews.delete(storedKey)
+    }
+  }
+  return true
+}
+
+export async function setVisibility(ownerId, id, visibility) {
+  if (!['private', 'public'].includes(visibility)) throw new Error('Visibility is invalid.')
+  const snippet = await findOwnedSnippet(ownerId, id)
+  if (!snippet) return null
+  snippet.visibility = visibility
+  if (visibility === 'public' && !snippet.slug) snippet.slug = await makeUniqueSlug(snippet.title)
+  await snippet.save()
+  return snippet.toObject()
+}
+
+export async function getPublicSnippet(slug, ipAddress) {
+  const snippet = await Snippet.findOne({ slug, visibility: 'public', deletedAt: null })
+    .populate('owner', 'username avatar')
+    .lean()
+  if (!snippet) return null
+  if (shouldCountPublicView(slug, ipAddress)) {
+    return Snippet.findOneAndUpdate(
+      { _id: snippet._id, visibility: 'public', deletedAt: null },
+      { $inc: { views: 1 } },
+      { new: true },
+    ).populate('owner', 'username avatar').lean()
+  }
+  return snippet
 }

@@ -10,6 +10,7 @@ import healthRoutes from './routes/healthRoutes.js'
 import authRoutes from './routes/authRoutes.js'
 import snippetRoutes from './routes/snippetRoutes.js'
 import collectionRoutes from './routes/collectionRoutes.js'
+import publicRoutes from './routes/publicRoutes.js'
 
 const app = express()
 const port = process.env.PORT
@@ -26,6 +27,7 @@ app.use(cookieParser())
 
 app.use('/api/health', healthRoutes)
 app.use('/api/auth', authRoutes)
+app.use('/api/public', publicRoutes)
 app.use('/api/snippets', snippetRoutes)
 app.use('/api/collections', collectionRoutes)
 

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { requireAuth } from '../middleware/authMiddleware.js'
-import { createSnippet, deleteSnippet, favoriteSnippet, getSnippet, listSnippets, popularTags, restoreSnippet, searchSnippets, unfavoriteSnippet, updateSnippet } from '../controllers/snippetController.js'
+import { createSnippet, deleteSnippet, favoriteSnippet, getSnippet, listSnippets, popularTags, restoreSnippet, searchSnippets, setVisibility, unfavoriteSnippet, updateSnippet } from '../controllers/snippetController.js'
 
 const router = Router()
 
@@ -12,6 +12,7 @@ router.get('/', listSnippets)
 router.post('/', createSnippet)
 router.get('/:id', getSnippet)
 router.put('/:id', updateSnippet)
+router.patch('/:id/visibility', setVisibility)
 router.delete('/:id', deleteSnippet)
 router.post('/:id/restore', restoreSnippet)
 router.post('/:id/favorite', favoriteSnippet)

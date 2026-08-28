@@ -1,3 +1,4 @@
+.share-panel { display: grid; gap: 12px; margin: 18px 0; padding: 16px; border: 1px solid #344255; border-radius: 5px; background: #151c25; }.share-link { display: flex; gap: 8px; }.share-link input { flex: 1; min-width: 0; padding: 9px 10px; border: 1px solid #344255; border-radius: 5px; background: #0f151d; color: #d6dee8; }.public-page { text-align: left; }.public-brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 48px; }.public-brand a { color: #6ee7b7; font: 700 20px var(--mono); text-decoration: none; }.detail-meta span { display: inline-flex; align-items: center; gap: 5px; }
 .counter {
   font-size: 16px;
   padding: 5px 10px;
