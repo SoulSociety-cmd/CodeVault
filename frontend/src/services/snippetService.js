@@ -5,6 +5,8 @@ export const searchSnippets = (params) => api.get('/snippets/search', { params }
 export const popularTags = () => api.get('/snippets/popular-tags')
 export const createSnippet = (snippet) => api.post('/snippets', snippet)
 export const getSnippet = (id) => api.get(`/snippets/${id}`)
+export const getSnippetVersions = (id) => api.get(`/snippets/${id}/versions`)
+export const getSnippetVersion = (id, version) => api.get(`/snippets/${id}/versions/${version}`)
 export const updateSnippet = (id, snippet) => api.put(`/snippets/${id}`, snippet)
 export const setVisibility = (id, visibility) => api.patch(`/snippets/${id}/visibility`, { visibility })
 export const getPublicSnippet = (slug) => api.get(`/public/snippets/${encodeURIComponent(slug)}`)

@@ -112,11 +112,27 @@ export async function getPopularTags(ownerId) {
 
 export async function createSnippet(ownerId, input) {
   const data = normalizeInput(input)
-  return Snippet.create({ ...data, owner: ownerId, slug: await makeUniqueSlug(data.title) })
+  const snippet = await Snippet.create({ ...data, owner: ownerId, slug: await makeUniqueSlug(data.title) })
+  await SnippetVersion.create({ snippetId: snippet._id, version: 1, code: data.code, createdBy: ownerId })
+  return snippet.toObject()
 }
 
 export async function getSnippet(ownerId, id) {
   return Snippet.findOne(ownerQuery(id, ownerId)).lean()
+}
+
+export async function listSnippetVersions(ownerId, id) {
+  const snippet = await findOwnedSnippet(ownerId, id)
+  if (!snippet) return null
+  return SnippetVersion.find({ snippetId: snippet._id }).sort({ version: -1, createdAt: -1 }).lean()
+}
+
+export async function getSnippetVersion(ownerId, id, version) {
+  const snippet = await findOwnedSnippet(ownerId, id)
+  if (!snippet) return null
+  const numericVersion = Number(version)
+  if (!Number.isInteger(numericVersion) || numericVersion < 1) throw new Error('Version is invalid.')
+  return SnippetVersion.findOne({ snippetId: snippet._id, version: numericVersion }).lean()
 }
 
 export async function updateSnippet(ownerId, id, input) {

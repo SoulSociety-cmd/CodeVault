@@ -36,6 +36,20 @@ export async function getSnippet(request, response) {
   } catch (error) { return sendError(response, error) }
 }
 
+export async function listSnippetVersions(request, response) {
+  try {
+    const versions = await snippetService.listSnippetVersions(request.user.id, request.params.id)
+    return versions ? response.json({ success: true, data: { versions } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
+  } catch (error) { return sendError(response, error) }
+}
+
+export async function getSnippetVersion(request, response) {
+  try {
+    const version = await snippetService.getSnippetVersion(request.user.id, request.params.id, request.params.version)
+    return version ? response.json({ success: true, data: { version } }) : response.status(404).json({ success: false, message: 'Snippet version not found.' })
+  } catch (error) { return sendError(response, error) }
+}
+
 export async function updateSnippet(request, response) {
   try {
     const snippet = await snippetService.updateSnippet(request.user.id, request.params.id, request.body)
