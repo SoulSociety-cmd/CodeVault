@@ -13,10 +13,10 @@ import collectionRoutes from './routes/collectionRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
 
 const app = express()
-const port = process.env.PORT
+const port = Number(process.env.PORT) || 5000
 
-if (!port) {
-  throw new Error('PORT must be set in the environment.')
+if (!process.env.PORT) {
+  console.warn('PORT not set; using default port 5000.')
 }
 
 app.use(helmet())
