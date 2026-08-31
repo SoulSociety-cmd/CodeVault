@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js'
 import snippetRoutes from './routes/snippetRoutes.js'
 import collectionRoutes from './routes/collectionRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
+import dashboardRoutes from './routes/dashboardRoutes.js'
 
 const app = express()
 const port = Number(process.env.PORT) || 5000
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/public', publicRoutes)
 app.use('/api/snippets', snippetRoutes)
 app.use('/api/collections', collectionRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 
 connectDB().catch((error) => {
   console.error('MongoDB connection failed:', error.message)

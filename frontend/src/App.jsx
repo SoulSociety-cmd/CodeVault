@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 import MySnippets from './pages/MySnippets.jsx'
 import SnippetDetails from './pages/SnippetDetails.jsx'
 import SnippetForm from './pages/SnippetForm.jsx'
@@ -19,7 +20,5 @@ function App() {
 }
 
 function AppShell() { return <><header className="topbar"><Link className="brand" to="/snippets">CodeVault</Link><SearchBar /><nav><Link to="/snippets">My snippets</Link><Link to="/favorites">Favorites</Link><Link to="/collections">Collections</Link><Link to="/dashboard">Dashboard</Link></nav></header><Outlet /></> }
-
-function Dashboard() { const { currentUser, logout } = useAuth(); return <main className="dashboard"><p className="eyebrow">CODEVAULT / DASHBOARD</p><h1>Welcome, {currentUser.username}.</h1><p>Your private vault is ready.</p><button onClick={logout}>Sign out</button><Link to="/login">Back to sign in</Link></main> }
 
 export default App
