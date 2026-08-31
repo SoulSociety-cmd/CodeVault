@@ -14,7 +14,7 @@ export default function SnippetDetails() {
   async function remove() { try { await snippetService.deleteSnippet(id); navigate('/snippets') } catch (requestError) { setError(requestError.response?.data?.message || 'Unable to delete snippet.') } }
   async function toggleFavorite() { try { const { data } = await (snippet.favorites > 0 ? snippetService.unfavoriteSnippet(id) : snippetService.favoriteSnippet(id)); setSnippet(data.data.snippet) } catch (requestError) { setError(requestError.response?.data?.message || 'Unable to update favorite.') } }
   async function toggleVisibility() { try { const { data } = await snippetService.setVisibility(id, snippet.visibility === 'public' ? 'private' : 'public'); setSnippet(data.data.snippet); setShareOpen(data.data.snippet.visibility === 'public') } catch (requestError) { setError(requestError.response?.data?.message || 'Unable to update visibility.') } }
-  async function copyShareLink() { await navigator.clipboard.writeText(`${window.location.origin}/s/${snippet.slug}`); setCopied(true); showToast('Public link copied.'); window.setTimeout(() => setCopied(false), 1800) }
+  async function copyShareLink() { await navigator.clipboard.writeText(`${window.location.origin}/s/${snippet.slug}`); setCopied(true); showToast('Public link copied.', 'success'); window.setTimeout(() => setCopied(false), 1800) }
   if (error) return <main className="page-shell"><p className="error">{error}</p><Link to="/snippets">Back to snippets</Link></main>
   if (!snippet) return <main className="page-shell"><p className="status">Loading snippet...</p></main>
   const isFavorite = snippet.favorites > 0

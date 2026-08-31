@@ -11,7 +11,7 @@ export default function CodeEditor({ value, language, readOnly, onChange, fullsc
 
   async function copyCode() {
     await navigator.clipboard.writeText(value || '')
-    showToast('Code copied to clipboard.')
+    showToast('Code copied to clipboard.', 'success')
   }
 
   return <div className={`code-editor ${fullscreen ? 'code-editor-fullscreen' : ''}`}>

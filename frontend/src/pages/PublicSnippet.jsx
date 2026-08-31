@@ -18,7 +18,7 @@ export default function PublicSnippet() {
 
   async function copyLink() {
     await navigator.clipboard.writeText(window.location.href)
-    showToast('Public link copied.')
+    showToast('Public link copied.', 'success')
   }
 
   if (error) return <main className="page-shell public-page"><p className="error">{error}</p><Link to="/login">Sign in</Link></main>
