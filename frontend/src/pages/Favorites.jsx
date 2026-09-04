@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import SnippetCard from '../components/SnippetCard.jsx'
 import * as snippetService from '../services/snippetService.js'
 import { useToast } from '../hooks/useToast.js'
-import { SkeletonList, LoadingSpinner } from '../components/Loading.jsx'
+import { SkeletonList } from '../components/Loading.jsx'
 import { Heart } from 'lucide-react'
 
 export default function Favorites() {

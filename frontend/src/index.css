@@ -117,3 +117,26 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+:root[data-theme='dark'] {
+  --app-bg: #0f151d;
+  --app-surface: #151c25;
+  --app-text: #d6dee8;
+  --app-muted: #8290a3;
+  --app-border: #2b3848;
+}
+
+:root[data-theme='light'] {
+  --app-bg: #f5f7fa;
+  --app-surface: #ffffff;
+  --app-text: #17212b;
+  --app-muted: #5c6b7a;
+  --app-border: #d8e0e8;
+  --text: #5c6b7a;
+  --text-h: #17212b;
+  --bg: #f5f7fa;
+  --border: #d8e0e8;
+  --code-bg: #e9eef3;
+}
+
+body { background: var(--app-bg); color: var(--app-text); }
