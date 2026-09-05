@@ -31,7 +31,11 @@ export async function authenticateUser(input) {
   validateCredentials(input, false)
   const email = input.email.trim().toLowerCase()
   const user = await User.findOne({ email }).select('+passwordHash')
-  if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) throw new Error('Invalid email or password.')
+  if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
+    const error = new Error('Invalid email or password.')
+    error.statusCode = 401
+    throw error
+  }
   return publicUser(user)
 }
 

@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 import Snippet from '../models/Snippet.js'
 import SnippetVersion from '../models/SnippetVersion.js'
+import Collection from '../models/Collection.js'
 
 const allowedLanguages = new Set(['c', 'cpp', 'java', 'python', 'javascript', 'typescript', 'html', 'css', 'sql', 'json', 'bash', 'go', 'rust', 'php'])
 const sortFields = {
@@ -30,9 +31,28 @@ function normalizeInput(input) {
     visibility: input.visibility === 'public' ? 'public' : 'private',
     collectionIds: Array.isArray(input.collectionIds) ? input.collectionIds : [],
   }
-  if (!data.title || !data.code || !allowedLanguages.has(data.language)) throw new Error('Title, code, and a supported language are required.')
-  if (data.collectionIds.some((id) => !mongoose.isValidObjectId(id))) throw new Error('Collection IDs are invalid.')
+  if (!data.title || !data.code || !allowedLanguages.has(data.language)) {
+    const error = new Error('Title, code, and a supported language are required.')
+    error.statusCode = 400
+    throw error
+  }
+  if (data.collectionIds.some((id) => !mongoose.isValidObjectId(id))) {
+    const error = new Error('Collection IDs are invalid.')
+    error.statusCode = 400
+    throw error
+  }
   return data
+}
+
+async function ownedCollectionIds(ownerId, ids) {
+  const uniqueIds = [...new Set(ids.map(String))]
+  const collections = await Collection.find({ _id: { $in: uniqueIds }, owner: ownerId }).select('_id').lean()
+  if (collections.length !== uniqueIds.length) {
+    const error = new Error('One or more collections were not found or are not owned by you.')
+    error.statusCode = 403
+    throw error
+  }
+  return collections.map((collection) => collection._id)
 }
 
 function makeSlug(title) {
@@ -112,6 +132,7 @@ export async function getPopularTags(ownerId) {
 
 export async function createSnippet(ownerId, input) {
   const data = normalizeInput(input)
+  data.collectionIds = await ownedCollectionIds(ownerId, data.collectionIds)
   const snippet = await Snippet.create({ ...data, owner: ownerId, slug: await makeUniqueSlug(data.title) })
   await SnippetVersion.create({ snippetId: snippet._id, version: 1, code: data.code, createdBy: ownerId })
   return snippet.toObject()
@@ -139,6 +160,7 @@ export async function updateSnippet(ownerId, id, input) {
   const data = normalizeInput(input)
   const snippet = await findOwnedSnippet(ownerId, id)
   if (!snippet) return null
+  data.collectionIds = await ownedCollectionIds(ownerId, data.collectionIds)
   const latest = await SnippetVersion.findOne({ snippetId: snippet._id }).sort({ version: -1 }).select('version').lean()
   await SnippetVersion.create({ snippetId: snippet._id, version: (latest?.version || 0) + 1, code: data.code, createdBy: ownerId })
   Object.assign(snippet, data)

@@ -83,8 +83,3 @@ export async function getDashboardStats(userId) {
     recentActivity,
   }
 }
-    mostViewedSnippets,
-    mostFavoritedSnippets,
-    recentActivity,
-  }
-}

@@ -66,15 +66,15 @@ export async function updateCollection(ownerId, id, input) {
   const previousIds = collection.snippets.map(String)
   collection.set({ ...data, snippets: ids })
   await collection.save()
-  await Snippet.updateMany({ _id: { $in: previousIds } }, { $pull: { collectionIds: collection._id } })
-  if (ids.length) await Snippet.updateMany({ _id: { $in: ids } }, { $addToSet: { collectionIds: collection._id } })
+  await Snippet.updateMany({ _id: { $in: previousIds }, owner: ownerId }, { $pull: { collectionIds: collection._id } })
+  if (ids.length) await Snippet.updateMany({ _id: { $in: ids }, owner: ownerId }, { $addToSet: { collectionIds: collection._id } })
   return collection.toObject()
 }
 
 export async function deleteCollection(ownerId, id) {
   const collection = await findOwnedCollection(ownerId, id)
   if (!collection) return null
-  await Snippet.updateMany({ _id: { $in: collection.snippets } }, { $pull: { collectionIds: collection._id } })
+  await Snippet.updateMany({ _id: { $in: collection.snippets }, owner: ownerId }, { $pull: { collectionIds: collection._id } })
   await collection.deleteOne()
   return collection.toObject()
 }
@@ -83,16 +83,16 @@ export async function addSnippet(ownerId, id, snippetId) {
   const collection = await findOwnedCollection(ownerId, id)
   if (!collection) return null
   const [ownedId] = await ownedSnippetIds(ownerId, [snippetId])
-  await Collection.updateOne({ _id: collection._id }, { $addToSet: { snippets: ownedId } })
-  await Snippet.updateOne({ _id: ownedId }, { $addToSet: { collectionIds: collection._id } })
+  await Collection.updateOne({ _id: collection._id, owner: ownerId }, { $addToSet: { snippets: ownedId } })
+  await Snippet.updateOne({ _id: ownedId, owner: ownerId }, { $addToSet: { collectionIds: collection._id } })
   return getCollection(ownerId, id)
 }
 
 export async function removeSnippet(ownerId, id, snippetId) {
   const collection = await findOwnedCollection(ownerId, id)
   if (!collection) return null
-  validateId(snippetId, 'Snippet ID')
-  await Collection.updateOne({ _id: collection._id }, { $pull: { snippets: snippetId } })
-  await Snippet.updateOne({ _id: snippetId, owner: ownerId }, { $pull: { collectionIds: collection._id } })
+  const [ownedId] = await ownedSnippetIds(ownerId, [snippetId])
+  await Collection.updateOne({ _id: collection._id, owner: ownerId }, { $pull: { snippets: snippetId } })
+  await Snippet.updateOne({ _id: ownedId, owner: ownerId }, { $pull: { collectionIds: collection._id } })
   return getCollection(ownerId, id)
 }
