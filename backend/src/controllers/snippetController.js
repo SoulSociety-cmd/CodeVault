@@ -1,94 +1,89 @@
 import * as snippetService from '../services/snippetService.js'
 
-function sendError(response, error) {
-  const status = error.statusCode || (error.message.includes('required') || error.message.includes('invalid') ? 400 : 500)
-  return response.status(status).json({ success: false, message: error.message })
-}
-
 export async function listSnippets(request, response) {
   try {
     const result = await snippetService.searchSnippets(request.user.id, request.query)
     return response.json({ success: true, data: result })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function searchSnippets(request, response) {
   try {
     const result = await snippetService.searchSnippets(request.user.id, request.query)
     return response.json({ success: true, data: result })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function popularTags(request, response) {
   try {
     return response.json({ success: true, data: { tags: await snippetService.getPopularTags(request.user.id) } })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function createSnippet(request, response) {
-  try { return response.status(201).json({ success: true, data: { snippet: await snippetService.createSnippet(request.user.id, request.body) } }) } catch (error) { return sendError(response, error) }
+  try { return response.status(201).json({ success: true, data: { snippet: await snippetService.createSnippet(request.user.id, request.body) } }) } catch (error) { throw error }
 }
 
 export async function getSnippet(request, response) {
   try {
     const snippet = await snippetService.getSnippet(request.user.id, request.params.id)
     return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function listSnippetVersions(request, response) {
   try {
     const versions = await snippetService.listSnippetVersions(request.user.id, request.params.id)
     return versions ? response.json({ success: true, data: { versions } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function getSnippetVersion(request, response) {
   try {
     const version = await snippetService.getSnippetVersion(request.user.id, request.params.id, request.params.version)
     return version ? response.json({ success: true, data: { version } }) : response.status(404).json({ success: false, message: 'Snippet version not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function updateSnippet(request, response) {
   try {
     const snippet = await snippetService.updateSnippet(request.user.id, request.params.id, request.body)
     return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function deleteSnippet(request, response) {
   try {
     const snippet = await snippetService.softDeleteSnippet(request.user.id, request.params.id)
     return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function restoreSnippet(request, response) {
   try {
     const snippet = await snippetService.restoreSnippet(request.user.id, request.params.id)
     return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function favoriteSnippet(request, response) {
-  try { const snippet = await snippetService.setFavorite(request.user.id, request.params.id, true); return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' }) } catch (error) { return sendError(response, error) }
+  try { const snippet = await snippetService.setFavorite(request.user.id, request.params.id, true); return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' }) } catch (error) { throw error }
 }
 
 export async function unfavoriteSnippet(request, response) {
-  try { const snippet = await snippetService.setFavorite(request.user.id, request.params.id, false); return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' }) } catch (error) { return sendError(response, error) }
+  try { const snippet = await snippetService.setFavorite(request.user.id, request.params.id, false); return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' }) } catch (error) { throw error }
 }
 
 export async function setVisibility(request, response) {
   try {
     const snippet = await snippetService.setVisibility(request.user.id, request.params.id, request.body.visibility)
     return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }
 
 export async function getPublicSnippet(request, response) {
   try {
     const snippet = await snippetService.getPublicSnippet(request.params.slug, request.ip)
     return snippet ? response.json({ success: true, data: { snippet } }) : response.status(404).json({ success: false, message: 'Snippet not found.' })
-  } catch (error) { return sendError(response, error) }
+  } catch (error) { throw error }
 }

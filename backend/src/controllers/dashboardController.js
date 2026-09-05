@@ -10,12 +10,5 @@ export async function getStats(req, res) {
       status: 'success',
       data,
     })
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error)
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch dashboard stats',
-      error: error.message,
-    })
-  }
+  } catch (error) { throw error }
 }

@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import express from 'express'
 import helmet from 'helmet'
 import morgan from 'morgan'
+import mongoSanitize from 'express-mongo-sanitize'
 
 import { connectDB } from './config/db.js'
 import healthRoutes from './routes/healthRoutes.js'
@@ -12,6 +13,7 @@ import snippetRoutes from './routes/snippetRoutes.js'
 import collectionRoutes from './routes/collectionRoutes.js'
 import publicRoutes from './routes/publicRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
+import { errorMiddleware } from './middleware/errorMiddleware.js'
 
 const app = express()
 const port = Number(process.env.PORT) || 5000
@@ -25,6 +27,7 @@ app.use(cors({ origin: process.env.FRONTEND_URL || true, credentials: true }))
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
+app.use(mongoSanitize({ replaceWith: '_' }))
 
 app.use('/api/health', healthRoutes)
 app.use('/api/auth', authRoutes)
@@ -32,6 +35,7 @@ app.use('/api/public', publicRoutes)
 app.use('/api/snippets', snippetRoutes)
 app.use('/api/collections', collectionRoutes)
 app.use('/api/dashboard', dashboardRoutes)
+app.use(errorMiddleware)
 
 connectDB().catch((error) => {
   console.error('MongoDB connection failed:', error.message)
