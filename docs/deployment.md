@@ -9,6 +9,7 @@ Deploy the frontend and backend as separate Render services, and use MongoDB Atl
 - Start command: `npm start`
 - Environment: `NODE_ENV=production`
 - Required variables: `PORT` (provided by Render), `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_URL`
+- Optional AI tag suggestion variables: `OPENAI_API_KEY` and `OPENAI_TAGS_MODEL` (defaults to `gpt-4o-mini`). Set the key as a Render secret; never expose it through the frontend.
 
 The backend listens on `process.env.PORT` and falls back to 5000 only for local development when the variable is absent.
 
