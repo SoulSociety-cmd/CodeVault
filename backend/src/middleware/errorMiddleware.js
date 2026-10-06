@@ -9,8 +9,8 @@ export function errorMiddleware(error, _request, response, _next) {
   } else if (error.name === 'ValidationError' || error.name === 'CastError') {
     statusCode = 400
     message = 'The submitted data is invalid.'
-  } else if (statusCode >= 400 && statusCode < 500 && error.safeMessage) {
-    message = error.safeMessage
+  } else if (statusCode >= 400 && error.safeMessage) {
+    message = typeof error.safeMessage === 'string' ? error.safeMessage : error.message
   } else if (statusCode >= 400 && statusCode < 500 && error.message) {
     message = error.message
   }

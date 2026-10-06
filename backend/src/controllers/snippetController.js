@@ -1,4 +1,10 @@
 import * as snippetService from '../services/snippetService.js'
+import { suggestSnippetTags } from '../services/tagSuggestionService.js'
+
+export async function suggestTags(request, response) {
+  const tags = await suggestSnippetTags(request.body)
+  return response.json({ success: true, data: { tags } })
+}
 
 export async function listSnippets(request, response) {
   try {
