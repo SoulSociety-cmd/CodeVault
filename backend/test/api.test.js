@@ -81,6 +81,40 @@ describe('CodeVault API', () => {
     })
     assert.equal(login.response.status, 200)
     assert.match(login.cookie, /token=/)
+
+    const originalFetch = globalThis.fetch
+    const originalApiKey = process.env.OPENAI_API_KEY
+    process.env.OPENAI_API_KEY = 'test-api-key'
+    globalThis.fetch = async (url, options) => {
+      if (!String(url).startsWith('https://api.openai.com/')) return originalFetch(url, options)
+      assert.equal(options.headers.Authorization, 'Bearer test-api-key')
+      return new Response(JSON.stringify({
+        choices: [{ message: { content: JSON.stringify({ tags: ['utility', 'arrays', 'arrays', 'JavaScript'] }) } }],
+      }), { status: 200, headers: { 'content-type': 'application/json' } })
+    }
+
+    try {
+      const suggestions = await request('/api/snippets/suggest-tags', {
+        method: 'POST',
+        headers: { cookie },
+        body: JSON.stringify({ title: 'Array helper', description: 'Filters values', code: 'const values = []', language: 'javascript', tags: ['utility'] }),
+      })
+      assert.equal(suggestions.response.status, 200)
+      assert.deepEqual(suggestions.body.data.tags, ['arrays', 'javascript'])
+
+      delete process.env.OPENAI_API_KEY
+      const unavailable = await request('/api/snippets/suggest-tags', {
+        method: 'POST',
+        headers: { cookie },
+        body: JSON.stringify({ code: 'const answer = 42', language: 'javascript' }),
+      })
+      assert.equal(unavailable.response.status, 503)
+      assert.match(unavailable.body.message, /not configured/)
+    } finally {
+      globalThis.fetch = originalFetch
+      if (originalApiKey === undefined) delete process.env.OPENAI_API_KEY
+      else process.env.OPENAI_API_KEY = originalApiKey
+    }
   })
 
   it('rejects unauthenticated protected requests', async () => {

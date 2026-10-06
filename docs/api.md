@@ -30,6 +30,7 @@ Validation errors return 400, invalid credentials/authentication return 401, and
 | DELETE | `/api/snippets/:id` | Yes, owner | None | Soft-deleted `snippet` |
 | POST | `/api/snippets/:id/restore` | Yes, owner | None | Restored `snippet` |
 | GET | `/api/snippets/search` | Yes | Same search query filters | `snippets`, `count` |
+| POST | `/api/snippets/suggest-tags` | Yes | `code`, `language`; optional `title`, `description`, `tags` | Suggested `tags` (does not modify a snippet) |
 | POST/DELETE | `/api/snippets/:id/favorite` | Yes, owner | None | Updated `snippet` |
 | PATCH | `/api/snippets/:id/visibility` | Yes, owner | `{ visibility: "public"|"private" }` | Updated `snippet` |
 
@@ -58,3 +59,5 @@ Validation errors return 400, invalid credentials/authentication return 401, and
 | GET | `/api/public/snippets/:slug` | No | Public `snippet`; private/deleted/missing slugs return 404 |
 
 Common errors are 400 validation, 401 authentication, 403 ownership, 404 missing resources, 409 duplicate data, and 500 unexpected server errors.
+
+Tag suggestions require the backend `OPENAI_API_KEY` environment variable. The optional `OPENAI_TAGS_MODEL` variable selects the OpenAI chat model. Snippet code and description are sent to that provider only when the user requests suggestions.
