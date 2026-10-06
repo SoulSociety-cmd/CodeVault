@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 
 import * as snippetService from '../services/snippetService.js'
 import CodeEditor from '../components/CodeEditor.jsx'
@@ -9,10 +10,75 @@ const languages = ['c', 'cpp', 'java', 'python', 'javascript', 'typescript', 'ht
 const initialForm = { title: '', description: '', code: '', language: 'javascript', tags: [], visibility: 'private', collectionIds: [] }
 
 export default function SnippetForm({ editing = false }) {
-  const { id } = useParams(); const navigate = useNavigate(); const { showToast } = useToast(); const [form, setForm] = useState(initialForm); const [tagText, setTagText] = useState(''); const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
+  const { id } = useParams(); const navigate = useNavigate(); const { showToast } = useToast(); const [form, setForm] = useState(initialForm); const [tagText, setTagText] = useState(''); const [error, setError] = useState(''); const [saving, setSaving] = useState(false); const [suggestingTags, setSuggestingTags] = useState(false); const [suggestedTags, setSuggestedTags] = useState([]); const [suggestionError, setSuggestionError] = useState(''); const [hasRequestedSuggestions, setHasRequestedSuggestions] = useState(false)
   useEffect(() => { if (editing) snippetService.getSnippet(id).then(({ data }) => setForm(data.data.snippet)).catch(() => setError('Unable to load snippet.')) }, [editing, id])
   function update(field, value) { setForm((current) => ({ ...current, [field]: value })) }
   async function handleSubmit(event) { event.preventDefault(); setSaving(true); setError(''); try { const action = editing ? snippetService.updateSnippet(id, form) : snippetService.createSnippet(form); const { data } = await action; showToast(editing ? 'Snippet updated successfully!' : 'Snippet created successfully!', 'success'); navigate(`/snippets/${data.data.snippet._id}`) } catch (requestError) { const msg = requestError.response?.data?.message || 'Unable to save snippet.'; setError(msg); showToast(msg, 'error') } finally { setSaving(false) } }
   function addTag(event) { if (event.key === 'Enter' && tagText.trim()) { event.preventDefault(); update('tags', [...form.tags, tagText.trim()]); setTagText('') } }
-  return <main className="page-shell form-shell"><div className="page-heading"><div><p className="eyebrow">CODEVAULT / {editing ? 'EDIT' : 'NEW'}</p><h1>{editing ? 'Edit Snippet' : 'Create Snippet'}</h1></div><Link to="/snippets">Back to snippets</Link></div><form className="snippet-form" onSubmit={handleSubmit}>{error && <p className="error">{error}</p>}<label>Title<input value={form.title} onChange={(event) => update('title', event.target.value)} required maxLength="160" /></label><label>Description<textarea value={form.description} onChange={(event) => update('description', event.target.value)} rows="3" /></label><div className="form-row"><label>Language<select value={form.language} onChange={(event) => update('language', event.target.value)}>{languages.map((language) => <option key={language}>{language}</option>)}</select></label><label>Visibility<select value={form.visibility} onChange={(event) => update('visibility', event.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label></div><label>Tags<input value={tagText} onChange={(event) => setTagText(event.target.value)} onKeyDown={addTag} placeholder="Type a tag and press Enter" /><span className="tag-list">{form.tags.map((tag) => <button type="button" key={tag} onClick={() => update('tags', form.tags.filter((item) => item !== tag))}>#{tag} ×</button>)}</span></label><label>Code<CodeEditor value={form.code} language={form.language} readOnly={false} onChange={(value) => update('code', value)} /></label><div className="form-actions"><Link to="/snippets">Cancel</Link><button className="primary-button" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save changes' : 'Create snippet'}</button></div></form></main>
+  async function suggestTags() {
+    setSuggestingTags(true)
+    setSuggestionError('')
+    setHasRequestedSuggestions(true)
+    try {
+      const { data } = await snippetService.suggestTags({
+        title: form.title,
+        description: form.description,
+        code: form.code,
+        language: form.language,
+        tags: form.tags,
+      })
+      setSuggestedTags(data.data.tags || [])
+    } catch (requestError) {
+      setSuggestionError(requestError.response?.data?.message || 'Unable to suggest tags right now.')
+    } finally {
+      setSuggestingTags(false)
+    }
+  }
+  function addSuggestedTag(tag) {
+    if (!form.tags.some((currentTag) => currentTag.toLowerCase() === tag.toLowerCase())) {
+      update('tags', [...form.tags, tag])
+    }
+    setSuggestedTags((current) => current.filter((candidate) => candidate !== tag))
+  }
+
+  const availableSuggestions = suggestedTags.filter((tag) => !form.tags.some((currentTag) => currentTag.toLowerCase() === tag.toLowerCase()))
+
+  return (
+    <main className="page-shell form-shell">
+      <div className="page-heading">
+        <div><p className="eyebrow">CODEVAULT / {editing ? 'EDIT' : 'NEW'}</p><h1>{editing ? 'Edit Snippet' : 'Create Snippet'}</h1></div>
+        <Link to="/snippets">Back to snippets</Link>
+      </div>
+      <form className="snippet-form" onSubmit={handleSubmit}>
+        {error && <p className="error">{error}</p>}
+        <label>Title<input value={form.title} onChange={(event) => update('title', event.target.value)} required maxLength="160" /></label>
+        <label>Description<textarea value={form.description} onChange={(event) => update('description', event.target.value)} rows="3" /></label>
+        <div className="form-row">
+          <label>Language<select value={form.language} onChange={(event) => update('language', event.target.value)}>{languages.map((language) => <option key={language}>{language}</option>)}</select></label>
+          <label>Visibility<select value={form.visibility} onChange={(event) => update('visibility', event.target.value)}><option value="private">Private</option><option value="public">Public</option></select></label>
+        </div>
+        <div className="tags-field">
+          <label htmlFor="snippet-tags">Tags</label>
+          <div className="tag-input-row">
+            <input id="snippet-tags" value={tagText} onChange={(event) => setTagText(event.target.value)} onKeyDown={addTag} placeholder="Type a tag and press Enter" />
+            <button className="secondary-button tag-suggest-button" type="button" onClick={suggestTags} disabled={!form.code.trim() || suggestingTags}>
+              <Sparkles size={16} /> {suggestingTags ? 'Suggesting...' : 'Suggest tags'}
+            </button>
+          </div>
+          <div className="tag-list">{form.tags.map((tag) => <button type="button" key={tag} onClick={() => update('tags', form.tags.filter((item) => item !== tag))}>#{tag} ×</button>)}</div>
+          <p className="tag-suggestion-note">Code and description are sent to the configured AI provider.</p>
+          {suggestionError && <p className="error" role="alert">{suggestionError}</p>}
+          {availableSuggestions.length > 0 && (
+            <div className="tag-suggestions" aria-live="polite">
+              <span>Suggested</span>
+              <div className="tag-list">{availableSuggestions.map((tag) => <button className="suggested-tag" type="button" key={tag} onClick={() => addSuggestedTag(tag)}>+ #{tag}</button>)}</div>
+            </div>
+          )}
+          {hasRequestedSuggestions && !suggestingTags && !suggestionError && availableSuggestions.length === 0 && <p className="tag-suggestion-note">No new tags to suggest.</p>}
+        </div>
+        <label>Code<CodeEditor value={form.code} language={form.language} readOnly={false} onChange={(value) => update('code', value)} /></label>
+        <div className="form-actions"><Link to="/snippets">Cancel</Link><button className="primary-button" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save changes' : 'Create snippet'}</button></div>
+      </form>
+    </main>
+  )
 }
