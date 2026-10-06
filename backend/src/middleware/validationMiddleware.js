@@ -68,6 +68,16 @@ export function validateSnippetBody(body) {
   if (body.visibility !== undefined && !['private', 'public'].includes(body.visibility)) throw validationError('Visibility is invalid.')
 }
 
+export function validateTagSuggestionBody(body) {
+  requireString(body.code, 'Code', { max: 500000 })
+  requireString(body.language, 'Language', { max: 30 })
+  if (body.title !== undefined) requireString(body.title, 'Title', { min: 0, max: 160 })
+  if (body.description !== undefined) requireString(body.description, 'Description', { min: 0, max: 1000 })
+  if (body.tags !== undefined && (!Array.isArray(body.tags) || body.tags.length > 30 || body.tags.some((tag) => typeof tag !== 'string'))) {
+    throw validationError('Tags are invalid.')
+  }
+}
+
 export function validateCollectionBody(body) {
   requireString(body.name, 'Collection name', { max: 120 })
   if (body.description !== undefined) requireString(body.description, 'Description', { min: 0, max: 1000 })
