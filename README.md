@@ -63,7 +63,11 @@ MONGODB_URI=mongodb://127.0.0.1:27017/codevault
 JWT_SECRET=replace-with-a-long-random-secret
 FRONTEND_URL=http://localhost:5173
 NODE_ENV=development
+OPENAI_API_KEY=
+OPENAI_TAGS_MODEL=gpt-4o-mini
 ```
+
+AI tag suggestions are optional and require a server-side `OPENAI_API_KEY`. The key is never sent to the frontend; snippet code and description are sent to OpenAI only when a user requests suggestions.
 
 Frontend (`frontend/.env`):
 
